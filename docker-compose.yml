@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: webhook_db
+    environment:
+      POSTGRES_DB: webhook_hub
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d webhook_hub"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  app:
+    image: php:8.3-cli-alpine
+    container_name: webhook_app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: webhook_hub
+      DB_USER: app
+      DB_PASS: secret
+      WEBHOOK_SECRET: dev-secret-change-me
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "apk add --no-cache postgresql-dev && docker-php-ext-install pdo_pgsql && php -S 0.0.0.0:8080 -t public"]
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:

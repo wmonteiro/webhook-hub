@@ -1,0 +1,13 @@
+{
+  "name": "local/webhook-hub",
+  "description": "Webhook ingestion hub with idempotency, transactional queue, retries and DLQ",
+  "type": "project",
+  "require": {
+    "php": ">=8.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}
